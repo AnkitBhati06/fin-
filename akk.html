@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Dark Slate, Soft Teal, Vivid Blue, Emerald Green, Gold, Purple, and Red -->
+    <!-- Chosen Palette: Dark Slate & Soft Teal -->
     <!-- Application Structure Plan: A dashboard layout is chosen for its effectiveness in presenting financial data. The structure flows from a high-level summary (key metric cards) to detailed exploration (interactive chart and table) and finally to contextual details (collapsible assumption panels). This non-linear, task-oriented design allows users to quickly grasp the overall financial picture and then drill down into specific areas of interest, which is more intuitive for financial analysis than a linear report format. User flow is guided by view-toggle buttons (Monthly/Quarterly) that control the granularity of the entire dashboard, ensuring a consistent and predictable interactive experience. -->
     <!-- Visualization & Content Choices:
         - Yearly Totals (Report Info) -> Goal: Inform -> Viz: Key metric cards (HTML/CSS) -> Interaction: None. Justification: Provides immediate, high-level financial summaries.
@@ -156,24 +156,24 @@
                 labels: ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
                 datasets: [
                     { label: 'Team Salaries', data: [30, 30, 30, 490, 490, 490, 490, 490, 490, 490, 490, 490], backgroundColor: '#0d9488' },
-                    { label: 'Marketing', data: [86.5, 86.5, 186.5, 235, 235, 235, 235, 235, 235, 235, 235, 235], backgroundColor: '#f59e0b' },
-                    { label: 'Tech Tools & Infra', data: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], backgroundColor: '#3b82f6' },
-                    { label: 'Office/Ops Infra', data: [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15], backgroundColor: '#22c55e' },
-                    { label: 'Backend & Server', data: [8, 8, 8, 12, 12, 12, 18, 18, 18, 25, 25, 25], backgroundColor: '#a855f7' },
-                    { label: 'Legal & Compliance', data: [50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#ef4444' },
-                    { label: 'Miscellaneous', data: [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15], backgroundColor: '#94a3b8' }
+                    { label: 'Marketing', data: [86.5, 86.5, 186.5, 235, 235, 235, 235, 235, 235, 235, 235, 235], backgroundColor: '#0d9488' },
+                    { label: 'Tech Tools & Infra', data: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10], backgroundColor: '#5eead4' },
+                    { label: 'Office/Ops Infra', data: [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15], backgroundColor: '#99f6e4' },
+                    { label: 'Backend & Server', data: [8, 8, 8, 12, 12, 12, 18, 18, 18, 25, 25, 25], backgroundColor: '#a7f3d0' },
+                    { label: 'Legal & Compliance', data: [50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#f59e0b' },
+                    { label: 'Miscellaneous', data: [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15], backgroundColor: '#d1d5db' }
                 ]
             },
             quarterly: {
                 labels: ["Q1 (Aug-Oct)", "Q2 (Nov-Jan)", "Q3 (Feb-Apr)", "Q4 (May-Jul)"],
                 datasets: [
                     { label: 'Team Salaries', data: [90, 1470, 1470, 1470], backgroundColor: '#0d9488' },
-                    { label: 'Marketing', data: [359.5, 705, 705, 705], backgroundColor: '#f59e0b' },
-                    { label: 'Tech Tools & Infra', data: [30, 30, 30, 30], backgroundColor: '#3b82f6' },
-                    { label: 'Office/Ops Infra', data: [45, 45, 45, 45], backgroundColor: '#22c55e' },
-                    { label: 'Backend & Server', data: [24, 36, 54, 75], backgroundColor: '#a855f7' },
-                    { label: 'Legal & Compliance', data: [50, 0, 0, 0], backgroundColor: '#ef4444' },
-                    { label: 'Miscellaneous', data: [45, 45, 45, 45], backgroundColor: '#94a3b8' }
+                    { label: 'Marketing', data: [359.5, 705, 705, 705], backgroundColor: '#0d9488' },
+                    { label: 'Tech Tools & Infra', data: [30, 30, 30, 30], backgroundColor: '#5eead4' },
+                    { label: 'Office/Ops Infra', data: [45, 45, 45, 45], backgroundColor: '#99f6e4' },
+                    { label: 'Backend & Server', data: [24, 36, 54, 75], backgroundColor: '#a7f3d0' },
+                    { label: 'Legal & Compliance', data: [50, 0, 0, 0], backgroundColor: '#f59e0b' },
+                    { label: 'Miscellaneous', data: [45, 45, 45, 45], backgroundColor: '#d1d5db' }
                 ]
             }
         };
