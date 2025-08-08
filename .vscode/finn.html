@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurameter Interactive Financial Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: A top-down dashboard design is used for optimal information hierarchy. It starts with high-level annual KPIs for an immediate overview. The core of the app is an interactive, toggleable chart section (Monthly vs. Quarterly view) to analyze trends and expense composition over time, reflecting the new operational phases. This is paired with a donut chart for a clear view of the annual expense distribution. Finally, a detailed data table and the updated assumptions are provided at the bottom for full transparency and deep-dive analysis. This structure guides the user from a broad summary to granular details logically and intuitively. -->
+    <!-- Visualization & Content Choices:
+        - Yearly KPIs: Goal: Inform. Method: Large text in cards. Justification: Quickest way to convey the most critical annual totals.
+        - Expense Trend: Goal: Compare/Analyze Change. Method: Stacked Bar Chart (Chart.js). Interaction: Toggle between Monthly/Quarterly views. Justification: Perfectly shows how the total burn rate evolves and how its composition changes, especially highlighting the major cost ramp-up in January.
+        - Annual Expense Breakdown: Goal: Show Proportions. Method: Donut Chart (Chart.js). Interaction: Hover tooltips. Justification: Ideal for visualizing the percentage contribution of each category to the total annual spend.
+        - Detailed Data: Goal: Provide Raw Data. Method: HTML Table. Justification: Ensures full transparency and allows users to see the exact source numbers from the latest report.
+        - Assumptions: Goal: Provide Context. Method: Styled text block. Justification: Crucial for understanding the 'why' behind the numbers, reflecting the updated operational plan.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .kpi-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .nav-button.active {
+            background-color: #1e293b; /* slate-800 */
+            color: white;
+        }
+        .nav-button:not(.active) {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #334155; /* slate-700 */
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Aurameter Financial Dashboard</h1>
+            <p class="text-lg text-slate-600 mt-2">Fiscal Year Projection: August 2024 - July 2025</p>
+        </header>
+
+        <section id="kpi-section" class="mb-8">
+            <h2 class="text-2xl font-semibold text-slate-800 mb-4">Annual Projections at a Glance</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="kpi-card">
+                    <h3 class="text-slate-500 font-medium">Total Projected Burn</h3>
+                    <p id="total-burn" class="text-3xl font-bold text-amber-600 mt-2">₹0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-slate-500 font-medium">Total Salary Costs</h3>
+                    <p id="total-salaries" class="text-3xl font-bold mt-2">₹0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-slate-500 font-medium">Total Marketing Spend</h3>
+                    <p id="total-marketing" class="text-3xl font-bold mt-2">₹0</p>
+                </div>
+                <div class="kpi-card">
+                    <h3 class="text-slate-500 font-medium">Total Backend & Server</h3>
+                    <p id="total-backend" class="text-3xl font-bold mt-2">₹0</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="charts-section" class="bg-white p-6 rounded-xl shadow-lg mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-semibold text-slate-800">Expense Analysis</h2>
+                    <p class="text-slate-500">View burn rate composition by month or quarter. Notice the significant cost increase in January as the team expands and AI/ML operations scale up.</p>
+                </div>
+                <div id="view-toggle" class="flex items-center space-x-2 mt-4 md:mt-0">
+                    <button class="nav-button active" data-view="quarterly">Quarterly</button>
+                    <button class="nav-button" data-view="monthly">Monthly</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="chart-container">
+                        <canvas id="burnRateChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 flex flex-col items-center justify-center">
+                     <h3 class="text-lg font-semibold text-center mb-2">Annual Expense Distribution</h3>
+                    <div class="w-full max-w-xs mx-auto">
+                        <canvas id="expenseDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="details-section">
+             <h2 class="text-2xl font-semibold text-slate-800 mb-4">Detailed Breakdown & Assumptions</h2>
+             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold mb-4">Monthly Expense Data (in ₹)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-100 text-slate-600 uppercase">
+                                <tr>
+                                    <th class="p-3">Month</th>
+                                    <th class="p-3 text-right">Salaries</th>
+                                    <th class="p-3 text-right">Marketing</th>
+                                    <th class="p-3 text-right">Backend/Server</th>
+                                    <th class="p-3 text-right">Other</th>
+                                    <th class="p-3 text-right font-bold">Total Burn</th>
+                                </tr>
+                            </thead>
+                            <tbody id="details-table-body" class="divide-y divide-slate-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-slate-800 text-slate-200 p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-semibold text-white mb-4">Key Assumptions & Notes</h3>
+                    <ul class="space-y-3 text-sm list-disc list-inside text-slate-300">
+                        <li><strong>Operational Phases:</strong> Aug-Sep are dedicated to tech development. App launch and marketing begin in October.</li>
+                        <li><strong>Team Salaries:</strong> Founders are paid throughout. The full development, design, and intern team is hired from January 2025.
+                            The total projected cost for Team Salaries is ₹35,80,000 for the full financial year. This is a significant part of the overall burn rate, with a major increase starting in January 2025. The breakdown is as follows:
+                            
+                            Founders: The two founders have a consistent salary of ₹15,000 each per month, totaling ₹30,000 per month throughout the entire year.
+                            
+                            New Hires: The full team is brought on from January 2025. This includes 2 App Developers at ₹80,000 each, 1 Backend Developer at ₹80,000, 1 Machine Learning Developer at ₹1,50,000, 1 UI/UX Designer at ₹40,000, and 3 ML Interns at ₹10,000 each. This brings the monthly salary cost up to ₹4,90,000 from January onwards.
+                            </li>
+                        <li><strong>Marketing:</strong> Campaigns start in October. The Campus CEO program expands in Jan-Feb. A Social Media Manager is hired from January.The total projected spend on Marketing is ₹10,32,000. The marketing strategy is phased, with costs fluctuating significantly throughout the year based on different initiatives:
+                            
+                            Initial Phase (October-December): The team recruits 10 Campus CEOs at a monthly cost of ₹1,000 per person plus an incentive, along with a monthly ad budget of ₹25,000. This is the initial launch and user acquisition phase.
+                            
+                            Expansion Phase (January-February): This is a high-growth period where the number of Campus CEOs expands to 100 for two months. Additionally, college fest promotions begin with a monthly budget of ₹50,000-₹60,000, and a Social Media Manager is hired at ₹30,000 per month.
+                            
+                            Sustained Phase (March onwards): The Campus CEO program scales back, but the ad budget and Social Media Manager costs continue, along with reduced promotional activity.</li>
+                        <li><strong>AWS Costs:</strong> Stage 1 costs (Aug-Dec) and Stage 2 costs (Jan-Jul) are distributed monthly.Our AWS server costs are divided into two stages to accommodate growth:
+
+                            Stage 1: A total cost of ₹1,08,315 is allocated over the first five months (August to December), which breaks down to approximately ₹21,663 per month.
+                            
+                            Stage 2: A total cost of ₹17,03,160 is allocated over the remaining seven months (January to July), which comes out to approximately ₹2,43,309 per month.</li>
+                        <li><strong>AI/ML Costs:</strong> Gemini costs run Oct-Dec. GPU Training and initial AI hosting are Jan-Mar. Model hosting continues at a different rate for the final four months.
+                            Our AI/ML infrastructure has a phased budget to align with development and launch:
+
+                            Gemini Costs: We have a budget of ₹1,20,000 for the first three months of operation (October to December), with no cost in the initial development phase.
+                            
+                            GPU Training: A significant cost of ₹9,96,000 is set for a three-month GPU training period from January to March.
+                            
+                            AI Model Hosting & Inference: This cost is planned to increase over time. We have a budget of ₹4,00,000 for the January to March quarter and a cost of ₹66,800 per month for the remaining four months (April to July).</li>
+                        <li><strong>Legal & Compliance:</strong> A one-time fee of ₹50,000 is allocated in August for setup.</li>
+                        <li> <strong>Other Charges:</strong>
+                            
+                           
+                            
+                            
+                          
+                            This category combines several operational expenses that are not directly tied to salaries or major server costs. The total cost for these "other charges" is ₹3,10,000. Here is the breakdown:
+                            
+                            Tech Tools & Infra: A fixed cost of ₹10,000 per month is allocated for essential software like Jira, Figma, and Slack. The total yearly cost for this is ₹1,20,000.
+                            
+                            Office/Operations Infra: A fixed cost of ₹5,000 per month is budgeted for co-working space and supplies. The yearly total is ₹60,000.
+                            
+                            Legal & Compliance: This is a one-time cost of ₹50,000 that is allocated at the beginning of the financial year in August for initial legal setup.
+                            
+                            Miscellaneous: A fixed cost of ₹15,000 per month is set aside for unforeseen expenses, team events, and other operational needs. The total yearly cost is ₹1,80,000. </li>
+                    </ul>
+                </div>
+             </div>
+        </section>
+
+    </div>
+
+    <script>
+        const financialData = {
+            months: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            salaries: [30000, 30000, 30000, 30000, 30000, 490000, 490000, 490000, 490000, 490000, 490000, 490000],
+            marketing: [0, 0, 86500, 86500, 86500, 220000, 220000, 66500, 66500, 66500, 66500, 66500],
+            techTools: [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000],
+            officeOps: [5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000],
+            backendServer: [21663, 21663, 71663, 71663, 71663, 985309, 985309, 985309, 320109, 320109, 320109, 320109],
+            legal: [50000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            misc: [15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000, 15000]
+        };
+
+        const formatCurrency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(value);
+
+        const sumArray = (arr) => arr.reduce((a, b) => a + b, 0);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const totalSalaries = sumArray(financialData.salaries);
+            const totalMarketing = sumArray(financialData.marketing);
+            const totalBackend = sumArray(financialData.backendServer);
+            const totalOther = sumArray(financialData.techTools) + sumArray(financialData.officeOps) + sumArray(financialData.legal) + sumArray(financialData.misc);
+            const totalBurn = totalSalaries + totalMarketing + totalBackend + totalOther;
+
+            document.getElementById('total-salaries').textContent = formatCurrency(totalSalaries);
+            document.getElementById('total-marketing').textContent = formatCurrency(totalMarketing);
+            document.getElementById('total-backend').textContent = formatCurrency(totalBackend);
+            document.getElementById('total-burn').textContent = formatCurrency(totalBurn);
+
+            const categoryColors = {
+                salaries: 'rgba(59, 130, 246, 0.8)', // blue-500
+                marketing: 'rgba(249, 115, 22, 0.8)', // orange-500
+                backendServer: 'rgba(234, 179, 8, 0.8)', // yellow-500
+                other: 'rgba(107, 114, 128, 0.8)' // gray-500
+            };
+            
+            const expenseCategories = {
+                salaries: financialData.salaries,
+                marketing: financialData.marketing,
+                backendServer: financialData.backendServer,
+                other: financialData.months.map((_, i) => financialData.techTools[i] + financialData.officeOps[i] + financialData.legal[i] + financialData.misc[i])
+            };
+
+            const getQuarterlyData = () => {
+                const quarterly = { labels: ['Q1 (Aug-Oct)', 'Q2 (Nov-Jan)', 'Q3 (Feb-Apr)', 'Q4 (May-Jul)'], datasets: {} };
+                Object.keys(expenseCategories).forEach(cat => {
+                    quarterly.datasets[cat] = [0, 0, 0, 0];
+                    for (let i = 0; i < 12; i++) {
+                        const qIndex = Math.floor(i / 3);
+                        quarterly.datasets[cat][qIndex] += expenseCategories[cat][i];
+                    }
+                });
+                return quarterly;
+            };
+
+            const getMonthlyData = () => ({
+                labels: financialData.months,
+                datasets: expenseCategories
+            });
+
+            const burnRateCtx = document.getElementById('burnRateChart').getContext('2d');
+            let burnRateChart;
+
+            function createOrUpdateBurnChart(data) {
+                if (burnRateChart) {
+                    burnRateChart.data.labels = data.labels;
+                    burnRateChart.data.datasets = Object.keys(data.datasets).map(key => ({
+                        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+                        data: data.datasets[key],
+                        backgroundColor: categoryColors[key],
+                    }));
+                    burnRateChart.update();
+                } else {
+                    burnRateChart = new Chart(burnRateCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: Object.keys(data.datasets).map(key => ({
+                                label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+                                data: data.datasets[key],
+                                backgroundColor: categoryColors[key],
+                            }))
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: false },
+                                legend: { position: 'bottom' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: { stacked: true, grid: { display: false } },
+                                y: { 
+                                    stacked: true, 
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            if (value >= 100000) return formatCurrency(value / 100000) + 'L';
+                                            if (value >= 1000) return formatCurrency(value / 1000) + 'k';
+                                            return formatCurrency(value);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            const donutCtx = document.getElementById('expenseDonutChart').getContext('2d');
+            new Chart(donutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Salaries', 'Marketing', 'Backend & Server', 'Other Expenses'],
+                    datasets: [{
+                        data: [totalSalaries, totalMarketing, totalBackend, totalOther],
+                        backgroundColor: [
+                            categoryColors.salaries,
+                            categoryColors.marketing,
+                            categoryColors.backendServer,
+                            categoryColors.other
+                        ],
+                        borderColor: '#f8fafc',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += formatCurrency(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const tableBody = document.getElementById('details-table-body');
+            financialData.months.forEach((month, i) => {
+                const otherCosts = financialData.techTools[i] + financialData.officeOps[i] + financialData.legal[i] + financialData.misc[i];
+                const total = financialData.salaries[i] + financialData.marketing[i] + financialData.backendServer[i] + otherCosts;
+                const row = `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-medium">${month} ${i < 5 ? "'24" : "'25"}</td>
+                        <td class="p-3 text-right">${formatCurrency(financialData.salaries[i])}</td>
+                        <td class="p-3 text-right">${formatCurrency(financialData.marketing[i])}</td>
+                        <td class="p-3 text-right">${formatCurrency(financialData.backendServer[i])}</td>
+                        <td class="p-3 text-right">${formatCurrency(otherCosts)}</td>
+                        <td class="p-3 text-right font-bold text-slate-900">${formatCurrency(total)}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            const viewToggle = document.getElementById('view-toggle');
+            viewToggle.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const view = e.target.dataset.view;
+                    viewToggle.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active');
+                    const data = view === 'quarterly' ? getQuarterlyData() : getMonthlyData();
+                    createOrUpdateBurnChart(data);
+                }
+            });
+            
+            createOrUpdateBurnChart(getQuarterlyData());
+        });
+    </script>
+</body>
+</html>
